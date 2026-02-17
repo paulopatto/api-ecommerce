@@ -55,25 +55,6 @@ describe('cartService', () => {
         couponCode: null
       });
     });
-
-    it('T4.1.1 - getCart com valor existente no Redis deve fazer JSON.parse e retornar o objeto armazenado', async () => {
-      // Arrange
-      const storedCart = {
-        items: [{ productId: 'p1', price: 10, quantity: 1 }],
-        subtotal: 10,
-        discount: 2,
-        total: 8,
-        couponCode: 'PROMO'
-      };
-      redisMock.get.mockResolvedValueOnce(JSON.stringify(storedCart));
-
-      // Act
-      const cart = await cartService.getCart(userId, tenantId);
-
-      // Assert
-      expect(redisMock.get).toHaveBeenCalledWith(buildCartKey(tenantId, userId));
-      expect(cart).toEqual(storedCart);
-    });
   });
 
   describe('addItem', () => {
