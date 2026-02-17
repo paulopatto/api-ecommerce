@@ -1,5 +1,10 @@
 # API E-commerce Node.js
 
+> Essa api foi baixada de https://github.com/alura-cursos/api_eccomerce e foi utilizada no curso
+> n8n 4 devs: Automatizando e integrando AI ao fluxo de trabalho
+> no módulo de automaão de testes.
+> Foi utlizado também um repositório de PROMPTS do repo https://github.com/alura-cursos/prompts_testes/
+
 API RESTful modular construída com Node.js, Express, Prisma (PostgreSQL) e Redis.
 
 ## Pré-requisitos
@@ -10,6 +15,7 @@ API RESTful modular construída com Node.js, Express, Prisma (PostgreSQL) e Redi
 ## Configuração
 
 1. **Instalar Dependências**
+
    ```bash
    npm install
    ```
@@ -18,6 +24,7 @@ API RESTful modular construída com Node.js, Express, Prisma (PostgreSQL) e Redi
    O arquivo `.env` já foi criado com defaults. Se necessário, ajuste as credenciais do banco.
 
 3. **Iniciar Infraestrutura (Banco e Redis)**
+
    ```bash
    docker compose up -d
    ```
