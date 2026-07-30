@@ -126,6 +126,30 @@ Resposta esperada (`404`):
 }
 ```
 
+#### Latência alta (aleatória)
+
+| Método | URL | Auth |
+|--------|-----|------|
+| `GET` | `/api/v1/debug/slow` | Não |
+
+Aguarda um tempo aleatório entre **190ms** e **2000ms** antes de responder.
+
+Resposta esperada (`200`):
+
+```json
+{
+  "data": {
+    "message": "Resposta atrasada com sucesso",
+    "delayMs": 842
+  },
+  "meta": {
+    "timestamp": "2026-07-30T21:00:00.000Z"
+  }
+}
+```
+
+O campo `delayMs` informa o atraso efetivamente aplicado naquela requisição.
+
 ### 2. Registrar usuário
 
 | Método | URL | Auth |
