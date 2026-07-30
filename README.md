@@ -106,6 +106,26 @@ Resposta esperada (`500`):
 }
 ```
 
+#### Erro 404
+
+| Método | URL | Auth |
+|--------|-----|------|
+| `GET` | `/api/v1/debug/error-404` | Não |
+
+Simula um recurso inexistente.
+
+Resposta esperada (`404`):
+
+```json
+{
+  "error": {
+    "code": "RESOURCE_NOT_FOUND",
+    "message": "Recurso simulado não encontrado",
+    "details": {}
+  }
+}
+```
+
 ### 2. Registrar usuário
 
 | Método | URL | Auth |
