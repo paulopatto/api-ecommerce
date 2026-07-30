@@ -29,17 +29,21 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Configurações de Segurança e Performance
-// CSP relaxado o suficiente para o Swagger UI carregar scripts/estilos inline.
+// Sem upgrade-insecure-requests: acesso HTTP (ex.: :3000) quebrava o Swagger UI.
 app.use(helmet({
     contentSecurityPolicy: {
+        useDefaults: true,
         directives: {
             defaultSrc: ["'self'"],
             styleSrc: ["'self'", "'unsafe-inline'"],
             scriptSrc: ["'self'", "'unsafe-inline'"],
             imgSrc: ["'self'", 'data:', 'https:'],
-            connectSrc: ["'self'"]
+            connectSrc: ["'self'"],
+            upgradeInsecureRequests: null
         }
-    }
+    },
+    // Evita bloqueio de assets do Swagger em alguns browsers/proxies
+    crossOriginEmbedderPolicy: false
 }));
 app.use(compression());
 app.use(cors()); // Configurável por tenant futuramente
