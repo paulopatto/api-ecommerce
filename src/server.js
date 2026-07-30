@@ -53,8 +53,21 @@ app.use(express.urlencoded({ extended: true }));
 // Logging
 app.use(httpLogger);
 
-// Documentação Swagger
+// Documentação Swagger / OpenAPI
 const swaggerDocument = YAML.load(path.join(__dirname, '../swagger.yaml'));
+const swaggerYamlPath = path.join(__dirname, '../swagger.yaml');
+
+app.get('/openapi.json', (req, res) => {
+    res.setHeader('Content-Disposition', 'attachment; filename="openapi.json"');
+    res.status(200).json(swaggerDocument);
+});
+
+app.get('/openapi.yaml', (req, res) => {
+    res.setHeader('Content-Type', 'application/yaml; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="openapi.yaml"');
+    res.sendFile(swaggerYamlPath);
+});
+
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
     explorer: true,
     customSiteTitle: 'API E-commerce Docs'

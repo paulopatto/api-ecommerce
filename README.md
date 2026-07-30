@@ -89,9 +89,17 @@ Documentação interativa OpenAPI:
 | Método | URL | Auth |
 |--------|-----|------|
 | `GET` | `/api-docs` | Não |
+| `GET` | `/openapi.json` | Não — download/import (WSO2, Postman, etc.) |
+| `GET` | `/openapi.yaml` | Não — mesma spec em YAML |
 
 Abra no browser: `http://localhost:3000/api-docs` (ou o domínio do Coolify + `/api-docs`).
 Use **Authorize** com o `accessToken` retornado no login/register.
+
+#### Importar no WSO2
+
+1. Baixe o JSON: `http://localhost:3000/openapi.json` (em produção: `http(s)://<host>/openapi.json`).
+2. No WSO2 API Publisher → **Import OpenAPI** → arquivo ou URL.
+3. Publique a API e associe a uma Application.
 
 ### Endpoints de simulação (debug)
 

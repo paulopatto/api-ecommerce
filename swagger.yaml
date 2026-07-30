@@ -4,6 +4,18 @@ info:
   description: |
     API RESTful modular (Auth, Products, Categories, Cart, Orders, Payments, Users e endpoints de debug).
     Autenticação via JWT Bearer (`Authorization: Bearer <accessToken>`).
+
+    ## Baixar OpenAPI (importar no WSO2)
+
+    - **JSON:** [`/openapi.json`](/openapi.json) — use esta URL ou baixe o arquivo para importar no WSO2 API Manager / Publisher.
+    - **YAML:** [`/openapi.yaml`](/openapi.yaml)
+
+    ### Como importar no WSO2
+    1. Abra `/openapi.json` no browser e salve o arquivo (`Ctrl+S` / “Salvar como”).
+    2. No **WSO2 API Publisher**, crie ou atualize uma API.
+    3. Escolha **Import OpenAPI** / **OpenAPI URL or File**.
+    4. Envie o JSON baixado **ou** informe a URL pública `http(s)://<host>/openapi.json`.
+    5. Revise endpoints, finalize o publish e gere as keys do Application.
   version: 1.0.0
 
 servers:
@@ -168,6 +180,33 @@ components:
           example: AWAITING_CONFIRMATION
 
 paths:
+  /openapi.json:
+    get:
+      tags: [Health]
+      summary: Baixar OpenAPI em JSON (WSO2 / Postman)
+      description: |
+        Retorna a especificação OpenAPI 3 em JSON.
+        Use para importar no WSO2 API Publisher (Import OpenAPI) ou salvar o arquivo.
+      responses:
+        '200':
+          description: Spec OpenAPI em JSON
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /openapi.yaml:
+    get:
+      tags: [Health]
+      summary: Baixar OpenAPI em YAML
+      responses:
+        '200':
+          description: Spec OpenAPI em YAML
+          content:
+            application/yaml:
+              schema:
+                type: string
+
   /health:
     get:
       tags: [Health]
