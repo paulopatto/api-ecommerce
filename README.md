@@ -82,6 +82,30 @@ Base URL local: `http://localhost:3000`
 
 Resposta esperada: `{ "status": "UP", "timestamp": "..." }`
 
+### Endpoints de simulação (debug)
+
+Úteis para testar monitoramento, alertas e fluxos de erro (ex.: Postman, n8n). Sem autenticação.
+
+#### Erro 500
+
+| Método | URL | Auth |
+|--------|-----|------|
+| `GET` | `/api/v1/debug/error-500` | Não |
+
+Simula uma falha interna do servidor.
+
+Resposta esperada (`500`):
+
+```json
+{
+  "error": {
+    "code": "INTERNAL_SERVER_ERROR",
+    "message": "Erro interno simulado",
+    "details": {}
+  }
+}
+```
+
 ### 2. Registrar usuário
 
 | Método | URL | Auth |

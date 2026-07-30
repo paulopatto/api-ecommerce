@@ -20,6 +20,7 @@ const orderRoutes = require('./modules/orders/orderRoutes');
 const paymentRoutes = require('./modules/payments/paymentRoutes');
 const categoryRoutes = require('./modules/categories/categoryRoutes');
 const userRoutes = require('./modules/users/userRoutes');
+const debugRoutes = require('./modules/debug/debugRoutes');
 const authMiddleware = require('./middlewares/authMiddleware');
 
 const app = express();
@@ -53,6 +54,7 @@ app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/debug', debugRoutes);
 
 // 404 Handler
 app.use((req, res, next) => {
