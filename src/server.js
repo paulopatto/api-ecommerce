@@ -1,4 +1,6 @@
-require('dotenv').config();
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config({ quiet: true });
+}
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -27,7 +29,18 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Configurações de Segurança e Performance
-app.use(helmet());
+// CSP relaxado o suficiente para o Swagger UI carregar scripts/estilos inline.
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", 'data:', 'https:'],
+            connectSrc: ["'self'"]
+        }
+    }
+}));
 app.use(compression());
 app.use(cors()); // Configurável por tenant futuramente
 app.use(express.json());
@@ -36,9 +49,12 @@ app.use(express.urlencoded({ extended: true }));
 // Logging
 app.use(httpLogger);
 
-// Documentação Swagger (se houver arquivo swagger.yaml)
-// const swaggerDocument = YAML.load(path.join(__dirname, '../swagger.yaml'));
-// app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+// Documentação Swagger
+const swaggerDocument = YAML.load(path.join(__dirname, '../swagger.yaml'));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
+    explorer: true,
+    customSiteTitle: 'API E-commerce Docs'
+}));
 
 // Healthcheck
 app.get('/health', async (req, res) => {

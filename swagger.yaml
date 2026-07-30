@@ -1,0 +1,762 @@
+openapi: 3.0.3
+info:
+  title: API E-commerce
+  description: |
+    API RESTful modular (Auth, Products, Categories, Cart, Orders, Payments, Users e endpoints de debug).
+    Autenticação via JWT Bearer (`Authorization: Bearer <accessToken>`).
+  version: 1.0.0
+
+servers:
+  - url: /
+    description: Servidor atual
+
+tags:
+  - name: Health
+  - name: Auth
+  - name: Categories
+  - name: Products
+  - name: Cart
+  - name: Orders
+  - name: Payments
+  - name: Users
+  - name: Debug
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: INVALID_PAYLOAD
+            message:
+              type: string
+            details:
+              type: object
+
+    AuthTokens:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+
+    AuthUser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [USER, ADMIN]
+
+    AuthSuccess:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/AuthUser'
+            tokens:
+              $ref: '#/components/schemas/AuthTokens'
+        meta:
+          type: object
+          properties:
+            timestamp:
+              type: string
+              format: date-time
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        sku:
+          type: string
+        price:
+          type: number
+        stock:
+          type: integer
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE]
+        categoryId:
+          type: string
+          format: uuid
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        parentId:
+          type: string
+          format: uuid
+          nullable: true
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+
+    Cart:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              productId:
+                type: string
+              name:
+                type: string
+              price:
+                type: number
+              quantity:
+                type: integer
+        total:
+          type: number
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [PENDING, PAID, CANCELED]
+        totalValue:
+          type: number
+
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          example: AWAITING_CONFIRMATION
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Healthcheck
+      responses:
+        '200':
+          description: Serviço disponível
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: UP
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /api/v1/auth/register:
+    post:
+      tags: [Auth]
+      summary: Registrar usuário
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name:
+                  type: string
+                  example: Nome Usuário
+                email:
+                  type: string
+                  format: email
+                  example: email@exemplo.com
+                password:
+                  type: string
+                  minLength: 6
+                  example: senhaForte123
+      responses:
+        '201':
+          description: Usuário criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSuccess'
+        '400':
+          description: Payload inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Email já em uso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSuccess'
+        '401':
+          description: Credenciais inválidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/categories:
+    get:
+      tags: [Categories]
+      summary: Listar categorias
+      responses:
+        '200':
+          description: Lista de categorias
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Category'
+    post:
+      tags: [Categories]
+      summary: Criar categoria (admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                parentId:
+                  type: string
+                  format: uuid
+                  nullable: true
+      responses:
+        '201':
+          description: Categoria criada
+        '401':
+          description: Não autenticado
+        '403':
+          description: Sem permissão de admin
+
+  /api/v1/categories/{id}:
+    get:
+      tags: [Categories]
+      summary: Obter categoria por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Categoria encontrada
+        '404':
+          description: Não encontrada
+    put:
+      tags: [Categories]
+      summary: Atualizar categoria (admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                parentId:
+                  type: string
+                  format: uuid
+                  nullable: true
+      responses:
+        '200':
+          description: Atualizada
+        '403':
+          description: Sem permissão
+    delete:
+      tags: [Categories]
+      summary: Remover categoria (admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Removida
+        '403':
+          description: Sem permissão
+
+  /api/v1/products:
+    get:
+      tags: [Products]
+      summary: Listar produtos
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: categoryId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Lista paginada
+    post:
+      tags: [Products]
+      summary: Criar produto (admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, description, sku, price, categoryId]
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                sku:
+                  type: string
+                price:
+                  type: number
+                stock:
+                  type: integer
+                categoryId:
+                  type: string
+                  format: uuid
+                status:
+                  type: string
+                  enum: [ACTIVE, INACTIVE]
+      responses:
+        '201':
+          description: Produto criado
+        '403':
+          description: Sem permissão
+
+  /api/v1/products/{id}:
+    get:
+      tags: [Products]
+      summary: Obter produto por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Produto encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Product'
+        '404':
+          description: Não encontrado
+    put:
+      tags: [Products]
+      summary: Atualizar produto (admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+      responses:
+        '200':
+          description: Atualizado
+        '403':
+          description: Sem permissão
+    delete:
+      tags: [Products]
+      summary: Remover produto (admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Removido
+
+  /api/v1/cart:
+    get:
+      tags: [Cart]
+      summary: Ver carrinho
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Carrinho atual
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Cart'
+        '401':
+          description: Não autenticado
+
+  /api/v1/cart/items:
+    post:
+      tags: [Cart]
+      summary: Adicionar item ao carrinho
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [productId, quantity]
+              properties:
+                productId:
+                  type: string
+                  format: uuid
+                quantity:
+                  type: integer
+                  minimum: 1
+      responses:
+        '200':
+          description: Item adicionado
+        '409':
+          description: Estoque insuficiente
+
+  /api/v1/cart/items/{itemId}:
+    delete:
+      tags: [Cart]
+      summary: Remover item do carrinho
+      description: O `itemId` corresponde ao `productId` do item.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Item removido
+
+  /api/v1/orders:
+    get:
+      tags: [Orders]
+      summary: Listar pedidos do usuário
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Histórico de pedidos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Order'
+    post:
+      tags: [Orders]
+      summary: Checkout (cria pedido a partir do carrinho)
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Pedido criado
+        '400':
+          description: Carrinho vazio
+
+  /api/v1/payments:
+    post:
+      tags: [Payments]
+      summary: Criar intenção de pagamento
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [orderId]
+              properties:
+                orderId:
+                  type: string
+                  format: uuid
+      responses:
+        '201':
+          description: Intenção criada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Payment'
+
+  /api/v1/payments/{id}/confirm:
+    post:
+      tags: [Payments]
+      summary: Confirmar pagamento
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pagamento confirmado
+        '400':
+          description: Idempotency-Key ausente
+
+  /api/v1/payments/{id}/cancel:
+    post:
+      tags: [Payments]
+      summary: Cancelar pagamento
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Pagamento cancelado
+
+  /api/v1/users/{id}:
+    get:
+      tags: [Users]
+      summary: Obter perfil
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Perfil
+        '403':
+          description: Acesso negado
+    put:
+      tags: [Users]
+      summary: Atualizar usuário
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Atualizado
+    delete:
+      tags: [Users]
+      summary: Remover usuário
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Removido
+
+  /api/v1/debug/error-500:
+    get:
+      tags: [Debug]
+      summary: Simula erro HTTP 500
+      responses:
+        '500':
+          description: Erro interno simulado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/debug/error-404:
+    get:
+      tags: [Debug]
+      summary: Simula erro HTTP 404
+      responses:
+        '404':
+          description: Recurso não encontrado simulado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/debug/slow:
+    get:
+      tags: [Debug]
+      summary: Resposta com latência aleatória (190ms–2000ms)
+      responses:
+        '200':
+          description: Resposta atrasada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      delayMs:
+                        type: integer
+                  meta:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time

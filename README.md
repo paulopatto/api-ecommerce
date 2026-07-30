@@ -82,6 +82,17 @@ Base URL local: `http://localhost:3000`
 
 Resposta esperada: `{ "status": "UP", "timestamp": "..." }`
 
+### Swagger UI
+
+Documentação interativa OpenAPI:
+
+| Método | URL | Auth |
+|--------|-----|------|
+| `GET` | `/api-docs` | Não |
+
+Abra no browser: `http://localhost:3000/api-docs` (ou o domínio do Coolify + `/api-docs`).
+Use **Authorize** com o `accessToken` retornado no login/register.
+
 ### Endpoints de simulação (debug)
 
 Úteis para testar monitoramento, alertas e fluxos de erro (ex.: Postman, n8n). Sem autenticação.

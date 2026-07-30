@@ -15,6 +15,7 @@ RUN npm ci \
   && npm install prisma@7.1.0 --omit=dev --no-fund --no-audit
 
 COPY src ./src
+COPY swagger.yaml ./swagger.yaml
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
